@@ -1,0 +1,30 @@
+name: Auto Deploy HTML to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/devops-keypair.pem
+          chmod 600 ~/.ssh/devops-keypair.pem
+          ssh-keyscan -H 3.79.167.173 >> ~/.ssh/known_hosts
+
+      - name: Make deploy script executable
+        run: chmod +x ./deploy.sh
+
+      - name: Run deploy script
+        env:
+          SSH_KEY_PATH: ~/.ssh/devops-keypair.pem
+          EC2_HOST: 3.79.167.173
+        run: ./deploy.sh
